@@ -1,0 +1,2105 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>中药功效随机抽查</title>
+    <style>
+:root {
+  color-scheme: light;
+  --paper: #f7f4ee;
+  --ink: #1f2723;
+  --muted: #6e756f;
+  --line: #d8d0c3;
+  --panel: #fffdf8;
+  --green: #246b4f;
+  --green-dark: #174735;
+  --red: #9d3b34;
+  --gold: #b98525;
+  --shadow: 0 18px 48px rgba(50, 45, 35, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif;
+  background:
+    linear-gradient(135deg, rgba(36, 107, 79, 0.12), transparent 36%),
+    linear-gradient(315deg, rgba(185, 133, 37, 0.14), transparent 38%),
+    var(--paper);
+  color: var(--ink);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 1px solid var(--line);
+  background: #fffaf0;
+  color: var(--ink);
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  border-color: #a99c8b;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.app-shell {
+  width: min(960px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.kicker {
+  margin: 0 0 6px;
+  color: var(--green);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 54px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.counter {
+  display: grid;
+  place-items: center;
+  min-width: 92px;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.72);
+}
+
+.counter span {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.counter small {
+  color: var(--muted);
+}
+
+.controls,
+.quiz-panel,
+.stats {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.88);
+  box-shadow: var(--shadow);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(260px, 360px);
+  gap: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mode-btn.active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.search-box {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffaf0;
+  padding: 0 12px;
+  min-height: 44px;
+}
+
+.search-box span {
+  color: var(--muted);
+}
+
+.search-box input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.quiz-panel {
+  padding: 22px;
+}
+
+.quiz-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.prompt-card {
+  display: grid;
+  place-items: center;
+  min-height: 230px;
+  border: 1px solid #cbbca7;
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(255, 250, 240, 0.92), rgba(255, 250, 240, 0.92)),
+    repeating-linear-gradient(90deg, transparent 0, transparent 36px, rgba(36, 107, 79, 0.07) 37px);
+  padding: 28px;
+}
+
+.prompt-text {
+  margin: 0;
+  max-width: 760px;
+  font-size: clamp(30px, 6vw, 58px);
+  line-height: 1.28;
+  text-align: center;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.answer-box {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border-left: 5px solid var(--gold);
+  border-radius: 8px;
+  background: #fff7e6;
+}
+
+.answer-box.hidden {
+  display: none;
+}
+
+.answer-label {
+  margin: 0 0 8px;
+  color: var(--gold);
+  font-weight: 800;
+}
+
+#answerText {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.7;
+}
+
+.actions,
+.judge-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.primary:hover {
+  background: var(--green-dark);
+}
+
+.judge.good {
+  color: var(--green-dark);
+  border-color: rgba(36, 107, 79, 0.45);
+}
+
+.judge.weak {
+  color: var(--red);
+  border-color: rgba(157, 59, 52, 0.45);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 14px;
+}
+
+.stats div {
+  display: grid;
+  gap: 2px;
+  min-height: 54px;
+  align-content: center;
+  border-right: 1px solid var(--line);
+}
+
+.stats strong {
+  font-size: 24px;
+}
+
+.stats span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+#reviewWeakBtn.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    align-items: stretch;
+  }
+
+  .controls,
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .counter {
+    min-width: 76px;
+  }
+
+  .stats div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+  }
+
+  .actions,
+  .judge-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+</style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="练习设置">
+        <div>
+          <p class="kicker">中药学 210-271 页</p>
+          <h1>中药功效随机抽查</h1>
+        </div>
+        <div class="counter">
+          <span id="totalCount">392</span>
+          <small>条题目</small>
+        </div>
+      </section>
+
+      <section class="controls" aria-label="抽查模式">
+        <div class="segmented" role="tablist" aria-label="题型">
+          <button class="mode-btn active" data-mode="name" type="button">看药名答功效</button>
+          <button class="mode-btn" data-mode="effect" type="button">看功效答药名</button>
+        </div>
+        <label class="search-box">
+          <span>范围</span>
+          <input id="searchInput" type="search" placeholder="输入药名或功效关键词" autocomplete="off" />
+        </label>
+      </section>
+
+      <section class="quiz-panel" aria-live="polite">
+        <div class="quiz-meta">
+          <span id="modeLabel">药名</span>
+          <span id="poolCount">392 条可抽</span>
+        </div>
+
+        <div class="prompt-card">
+          <p id="promptText" class="prompt-text">麻黄</p>
+        </div>
+
+        <div id="answerBox" class="answer-box hidden">
+          <p class="answer-label">答案</p>
+          <p id="answerText"></p>
+        </div>
+
+        <div class="actions">
+          <button id="showAnswerBtn" class="primary" type="button">显示答案</button>
+          <button id="nextBtn" type="button">下一题</button>
+        </div>
+
+        <div class="judge-row" aria-label="掌握情况">
+          <button id="knownBtn" class="judge good" type="button">掌握</button>
+          <button id="unknownBtn" class="judge weak" type="button">不熟</button>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="练习统计">
+        <div>
+          <strong id="seenCount">0</strong>
+          <span>已抽查</span>
+        </div>
+        <div>
+          <strong id="knownCount">0</strong>
+          <span>掌握</span>
+        </div>
+        <div>
+          <strong id="unknownCount">0</strong>
+          <span>不熟</span>
+        </div>
+        <button id="reviewWeakBtn" type="button">只抽不熟</button>
+        <button id="resetBtn" type="button">重置</button>
+      </section>
+    </main>
+    <script>
+window.HERB_DATA = [
+  {
+    "name": "麻黄",
+    "effect": "发汗解表，宣肺平喘，利水消肿，散寒通滞"
+  },
+  {
+    "name": "桂枝",
+    "effect": "发汗解肌，温通经脉，助阳化气，平冲降逆，散寒止痛"
+  },
+  {
+    "name": "紫苏叶",
+    "effect": "解表散寒，行气和胃，止呕安胎，解鱼蟹毒"
+  },
+  {
+    "name": "生姜",
+    "effect": "解表散寒，温中止呕，化痰止咳，解毒"
+  },
+  {
+    "name": "香薷",
+    "effect": "发汗解表，化湿和中，利水消肿"
+  },
+  {
+    "name": "荆芥",
+    "effect": "解表散风，透疹消疮，收敛止血"
+  },
+  {
+    "name": "防风",
+    "effect": "祛风解表，胜湿止痛，息风止痉"
+  },
+  {
+    "name": "羌活",
+    "effect": "解表散寒，祛风除湿，止痛"
+  },
+  {
+    "name": "白芷",
+    "effect": "解表散寒，祛风止痛，宣通鼻窍，燥湿止带，消肿排脓，祛风止痒，祛浊除臭"
+  },
+  {
+    "name": "细辛",
+    "effect": "散寒解表，祛风止痛，宣通鼻窍，温肺化饮"
+  },
+  {
+    "name": "苍耳子",
+    "effect": "散风寒，通鼻窍，祛风湿，止痛止痒"
+  },
+  {
+    "name": "藁本",
+    "effect": "祛风散寒，除湿止痛"
+  },
+  {
+    "name": "辛夷",
+    "effect": "散风寒，通鼻窍"
+  },
+  {
+    "name": "葱白",
+    "effect": "发汗解表，散寒通阳；外敷散结通络，下乳，解毒散结"
+  },
+  {
+    "name": "薄荷",
+    "effect": "疏散风热，清利头目，利咽透疹，疏肝行气，芳香辟秽，发汗"
+  },
+  {
+    "name": "牛蒡子",
+    "effect": "疏散风热，宣肺祛痰，利咽透疹，解毒消肿，滑肠通便"
+  },
+  {
+    "name": "蝉蜕",
+    "effect": "疏散风热，利咽开音，透疹止痒，明目退翳，息风解痉"
+  },
+  {
+    "name": "桑叶",
+    "effect": "疏散风热，清肺润燥，平抑肝阳，清肝明目，清热解毒，凉血止血"
+  },
+  {
+    "name": "菊花",
+    "effect": "疏散风热，平抑肝阳，清肝明目，清热解毒，消痈肿"
+  },
+  {
+    "name": "蔓荆子",
+    "effect": "疏散风热，清利头目，祛风止痛"
+  },
+  {
+    "name": "柴胡",
+    "effect": "疏散退热，疏肝解郁，升举阳气，退热截疟"
+  },
+  {
+    "name": "升麻",
+    "effect": "发表透疹，清热解毒，升举阳气"
+  },
+  {
+    "name": "葛根",
+    "effect": "解肌退热，生津止渴，透疹，升阳止泻，通经活络，解酒毒"
+  },
+  {
+    "name": "淡豆豉",
+    "effect": "解表，除烦，宣发郁热"
+  },
+  {
+    "name": "浮萍",
+    "effect": "宣散风热，发汗解表，透疹止痒，利尿消肿"
+  },
+  {
+    "name": "木贼",
+    "effect": "疏散风热，明目退翳，止血"
+  },
+  {
+    "name": "谷精草",
+    "effect": "疏散风热，明目退翳"
+  },
+  {
+    "name": "石膏",
+    "effect": "生用：清热泻火，除烦止渴；煅用：收湿，生肌，敛疮，止血"
+  },
+  {
+    "name": "知母",
+    "effect": "清热泻火，滋阴润燥，生津止渴"
+  },
+  {
+    "name": "芦根",
+    "effect": "清热泻火，生津止渴，除烦止呕，利尿"
+  },
+  {
+    "name": "天花粉",
+    "effect": "清热泻火，生津止渴，消肿排脓"
+  },
+  {
+    "name": "栀子",
+    "effect": "泻火除烦，清热利湿，凉血解毒；外用消肿止痛；焦栀子凉血止血"
+  },
+  {
+    "name": "夏枯草",
+    "effect": "清肝泻火，明目，散结消肿"
+  },
+  {
+    "name": "决明子",
+    "effect": "清热明目，润肠通便，平肝清肝"
+  },
+  {
+    "name": "淡竹叶",
+    "effect": "清热泻火，除烦，利尿通淋"
+  },
+  {
+    "name": "密蒙花",
+    "effect": "清热泻火，养肝明目，退翳"
+  },
+  {
+    "name": "青葙子",
+    "effect": "清肝泻火，明目退翳"
+  },
+  {
+    "name": "黄芩",
+    "effect": "清热燥湿，泻火解毒，止血，安胎"
+  },
+  {
+    "name": "黄连",
+    "effect": "清热燥湿，泻火解毒"
+  },
+  {
+    "name": "黄柏",
+    "effect": "清热燥湿，泻火解毒，除骨蒸"
+  },
+  {
+    "name": "龙胆",
+    "effect": "清热燥湿，泻肝胆火"
+  },
+  {
+    "name": "秦皮",
+    "effect": "清热燥湿，收涩止痢，止带，明目"
+  },
+  {
+    "name": "苦参",
+    "effect": "清热燥湿，杀虫止痒，利尿"
+  },
+  {
+    "name": "白鲜皮",
+    "effect": "清热燥湿，祛风解毒"
+  },
+  {
+    "name": "金银花",
+    "effect": "清热解毒，疏散风热，凉血止痢"
+  },
+  {
+    "name": "连翘",
+    "effect": "清热解毒，消肿散结，疏散风热，清心利尿"
+  },
+  {
+    "name": "大青叶",
+    "effect": "清热解毒，凉血消斑"
+  },
+  {
+    "name": "板蓝根",
+    "effect": "清热解毒，凉血利咽"
+  },
+  {
+    "name": "青黛",
+    "effect": "清热解毒，凉血消斑，泻火定惊"
+  },
+  {
+    "name": "贯众",
+    "effect": "清热解毒，凉血止血，驱虫"
+  },
+  {
+    "name": "蒲公英",
+    "effect": "清热解毒，消肿散结，利湿通淋，清肝明目"
+  },
+  {
+    "name": "紫花地丁",
+    "effect": "清热解毒，凉血消肿，消痈散结，兼解蛇毒"
+  },
+  {
+    "name": "重楼",
+    "effect": "清热解毒，消肿止痛，凉肝定惊，化瘀止血"
+  },
+  {
+    "name": "鱼腥草",
+    "effect": "清热解毒，消痈排脓，利尿通淋，清热除湿，止痢"
+  },
+  {
+    "name": "山豆根",
+    "effect": "清热解毒，消肿利咽"
+  },
+  {
+    "name": "白头翁",
+    "effect": "清热解毒，凉血止痢，清热祛湿"
+  },
+  {
+    "name": "射干",
+    "effect": "清热解毒，消痰，利咽"
+  },
+  {
+    "name": "土茯苓",
+    "effect": "解毒，除湿，通利关节"
+  },
+  {
+    "name": "熊胆粉",
+    "effect": "清热解毒，息风止痉，清肝明目"
+  },
+  {
+    "name": "穿心莲",
+    "effect": "清热解毒，凉血消肿，清热燥湿，止痢"
+  },
+  {
+    "name": "野菊花",
+    "effect": "清热解毒，泻火平肝"
+  },
+  {
+    "name": "白花蛇舌草",
+    "effect": "清热解毒，消痈，利湿通淋"
+  },
+  {
+    "name": "败酱草",
+    "effect": "清热解毒，消痈排脓，祛瘀止痛"
+  },
+  {
+    "name": "大血藤",
+    "effect": "清热解毒，活血，祛风止痛"
+  },
+  {
+    "name": "马勃",
+    "effect": "清肺解毒利咽，止血"
+  },
+  {
+    "name": "马齿苋",
+    "effect": "清热解毒，凉血止血，止痢，利尿通淋"
+  },
+  {
+    "name": "鸦胆子",
+    "effect": "清热解毒，止痢，截疟；外用腐蚀赘疣"
+  },
+  {
+    "name": "漏芦",
+    "effect": "清热解毒，消痈散结，通经下乳，舒筋通脉"
+  },
+  {
+    "name": "山慈菇",
+    "effect": "清热解毒，化痰散结"
+  },
+  {
+    "name": "半边莲",
+    "effect": "清热解毒，利尿消肿"
+  },
+  {
+    "name": "白蔹",
+    "effect": "清热解毒，消痈散结，敛疮生肌"
+  },
+  {
+    "name": "生地黄",
+    "effect": "清热凉血，养阴生津"
+  },
+  {
+    "name": "玄参",
+    "effect": "清热凉血，滋阴降火，解毒散结"
+  },
+  {
+    "name": "牡丹皮",
+    "effect": "清热凉血，活血化瘀"
+  },
+  {
+    "name": "赤芍",
+    "effect": "清热凉血，散瘀止痛，清肝泻火"
+  },
+  {
+    "name": "水牛角",
+    "effect": "清热凉血，解毒定惊"
+  },
+  {
+    "name": "紫草",
+    "effect": "清热凉血，活血解毒，透疹消斑"
+  },
+  {
+    "name": "青蒿",
+    "effect": "清虚热，除骨蒸，解暑热，截疟，退黄"
+  },
+  {
+    "name": "白薇",
+    "effect": "清虚热，凉血，利尿通淋，解毒疗疮"
+  },
+  {
+    "name": "地骨皮",
+    "effect": "凉血除蒸，清肺降火，生津止渴"
+  },
+  {
+    "name": "银柴胡",
+    "effect": "清虚热，除疳热"
+  },
+  {
+    "name": "胡黄连",
+    "effect": "退虚热，除疳热，清湿热"
+  },
+  {
+    "name": "大黄",
+    "effect": "泻下攻积，清热泻火，凉血解毒，逐瘀通经，利湿退黄，炭能止血"
+  },
+  {
+    "name": "芒硝",
+    "effect": "泻下通便，润燥软坚，清火消肿"
+  },
+  {
+    "name": "番泻叶",
+    "effect": "泻热行滞，通便，利水"
+  },
+  {
+    "name": "芦荟",
+    "effect": "泻下通便，清肝泻火，杀虫疗疳"
+  },
+  {
+    "name": "火麻仁",
+    "effect": "润肠通便，滋养补虚"
+  },
+  {
+    "name": "郁李仁",
+    "effect": "润肠通便，下气利水"
+  },
+  {
+    "name": "甘遂",
+    "effect": "泻水逐饮，消肿散结"
+  },
+  {
+    "name": "京大戟",
+    "effect": "泻水逐饮，消肿散结"
+  },
+  {
+    "name": "芫花",
+    "effect": "泻水逐饮，祛痰止咳；外用杀虫疗疮"
+  },
+  {
+    "name": "牵牛子",
+    "effect": "泻水通便，消痰涤饮，杀虫攻积"
+  },
+  {
+    "name": "巴豆霜",
+    "effect": "峻下冷积，逐水退肿，祛痰利咽；外用蚀疮"
+  },
+  {
+    "name": "商陆",
+    "effect": "逐水消肿，通利二便；外用解毒散结"
+  },
+  {
+    "name": "独活",
+    "effect": "祛风除湿，通痹止痛，解表"
+  },
+  {
+    "name": "威灵仙",
+    "effect": "祛风湿，通经络，止痹痛，消骨鲠"
+  },
+  {
+    "name": "木瓜",
+    "effect": "舒筋活络，和胃化湿，消食，生津止渴"
+  },
+  {
+    "name": "蕲蛇",
+    "effect": "祛风，通络，止痉"
+  },
+  {
+    "name": "乌梢蛇",
+    "effect": "祛风，通络，止痉"
+  },
+  {
+    "name": "川乌",
+    "effect": "祛风除湿，温经止痛"
+  },
+  {
+    "name": "草乌",
+    "effect": "祛风除湿，温经止痛"
+  },
+  {
+    "name": "海风藤",
+    "effect": "祛风湿，通经络，止痹痛"
+  },
+  {
+    "name": "青风藤",
+    "effect": "祛风湿，通经络，利小便"
+  },
+  {
+    "name": "昆明山海棠",
+    "effect": "祛风除湿，活血止痛，续筋接骨"
+  },
+  {
+    "name": "穿山龙",
+    "effect": "祛风除湿，舒筋通络，活血止痛，止咳平喘"
+  },
+  {
+    "name": "秦艽",
+    "effect": "祛风湿，清湿热，舒筋络，止痹痛，退虚热"
+  },
+  {
+    "name": "防己",
+    "effect": "祛风湿，止痛，利水消肿"
+  },
+  {
+    "name": "雷公藤",
+    "effect": "祛风除湿，活血通络，消肿止痛，杀虫解毒"
+  },
+  {
+    "name": "络石藤",
+    "effect": "祛风通络，凉血消肿"
+  },
+  {
+    "name": "豨莶草",
+    "effect": "祛风湿，利关节，解毒"
+  },
+  {
+    "name": "臭梧桐",
+    "effect": "祛风湿，通经络，平肝"
+  },
+  {
+    "name": "桑枝",
+    "effect": "祛风湿，利关节，利水"
+  },
+  {
+    "name": "海桐皮",
+    "effect": "祛风除湿，通络止痛，杀虫止痒"
+  },
+  {
+    "name": "五加皮",
+    "effect": "祛风除湿，补益肝肾，强筋壮骨，利水消肿"
+  },
+  {
+    "name": "桑寄生",
+    "effect": "祛风湿，补肝肾，强筋骨，安胎元"
+  },
+  {
+    "name": "狗脊",
+    "effect": "祛风湿，补肝肾，强腰膝"
+  },
+  {
+    "name": "广藿香",
+    "effect": "芳香化湿，和中止呕，发表解暑"
+  },
+  {
+    "name": "佩兰",
+    "effect": "芳香化湿，醒脾开胃，发表解暑"
+  },
+  {
+    "name": "苍术",
+    "effect": "燥湿健脾，祛风散寒，明目"
+  },
+  {
+    "name": "厚朴",
+    "effect": "燥湿消痰，下气除满，行气消积，消痰平喘"
+  },
+  {
+    "name": "砂仁",
+    "effect": "化湿开胃，温脾止泻，理气安胎"
+  },
+  {
+    "name": "豆蔻",
+    "effect": "化湿行气，温中止呕，开胃消食"
+  },
+  {
+    "name": "草豆蔻",
+    "effect": "燥湿行气，温中止呕"
+  },
+  {
+    "name": "草果",
+    "effect": "燥湿温中，截疟除痰"
+  },
+  {
+    "name": "茯苓",
+    "effect": "利水渗湿，健脾补中，宁心安神"
+  },
+  {
+    "name": "猪苓",
+    "effect": "利水渗湿"
+  },
+  {
+    "name": "泽泻",
+    "effect": "利水渗湿，泄热，化浊降脂"
+  },
+  {
+    "name": "薏苡仁",
+    "effect": "利水渗湿，健脾止泻，清热排脓，除痹，解毒散结"
+  },
+  {
+    "name": "香加皮",
+    "effect": "利水消肿，祛风湿，强筋骨"
+  },
+  {
+    "name": "枳椇子",
+    "effect": "利水消肿，解酒毒"
+  },
+  {
+    "name": "车前子",
+    "effect": "清热利尿通淋，渗湿止泻，清肝明目，清肺化痰"
+  },
+  {
+    "name": "滑石",
+    "effect": "利尿通淋，清热解暑；外用收湿敛疮"
+  },
+  {
+    "name": "木通",
+    "effect": "利尿通淋，清心除烦，通经下乳"
+  },
+  {
+    "name": "通草",
+    "effect": "利尿通淋，通气下乳"
+  },
+  {
+    "name": "瞿麦",
+    "effect": "利尿通淋，活血通经"
+  },
+  {
+    "name": "石韦",
+    "effect": "利尿通淋，清肺止咳，凉血止血"
+  },
+  {
+    "name": "萹蓄",
+    "effect": "利湿去浊，祛风除痒"
+  },
+  {
+    "name": "海金沙",
+    "effect": "利尿通淋，清热止痛"
+  },
+  {
+    "name": "萆薢",
+    "effect": "利湿去浊，祛风除痹"
+  },
+  {
+    "name": "地肤子",
+    "effect": "清热利湿，祛风止痒"
+  },
+  {
+    "name": "冬葵子",
+    "effect": "清热利尿通淋，下乳，润肠"
+  },
+  {
+    "name": "灯心草",
+    "effect": "利尿通淋，清心降火"
+  },
+  {
+    "name": "茵陈",
+    "effect": "清利湿热，利胆退黄"
+  },
+  {
+    "name": "金钱草",
+    "effect": "利湿退黄，利尿通淋，解毒消肿"
+  },
+  {
+    "name": "虎杖",
+    "effect": "利湿退黄，清热解毒，散瘀止痛，化痰止咳，泻热通便"
+  },
+  {
+    "name": "珍珠草",
+    "effect": "利湿退黄，清热解毒，明目，消积"
+  },
+  {
+    "name": "附子",
+    "effect": "回阳救逆，补火助阳，散寒止痛"
+  },
+  {
+    "name": "肉桂",
+    "effect": "补火助阳，散寒止痛，温通经脉，引火归元"
+  },
+  {
+    "name": "干姜",
+    "effect": "温中散寒，回阳通脉，温肺化饮"
+  },
+  {
+    "name": "吴茱萸",
+    "effect": "散寒止痛，降逆止呕，助阳止泻"
+  },
+  {
+    "name": "丁香",
+    "effect": "温中降逆，补肾助阳，散寒止痛"
+  },
+  {
+    "name": "花椒",
+    "effect": "温中止痛，杀虫止痒"
+  },
+  {
+    "name": "高良姜",
+    "effect": "散寒止痛，温中止呕"
+  },
+  {
+    "name": "小茴香",
+    "effect": "散寒止痛，理气和胃"
+  },
+  {
+    "name": "荜菝",
+    "effect": "温中散寒，下气止痛"
+  },
+  {
+    "name": "荜澄茄",
+    "effect": "温中散寒，行气止痛"
+  },
+  {
+    "name": "胡椒",
+    "effect": "温中散寒，下气消痰，消积平喘"
+  },
+  {
+    "name": "陈皮",
+    "effect": "理气健脾，燥湿化痰，行气通痹，止痛"
+  },
+  {
+    "name": "青皮",
+    "effect": "疏肝破气，消积化滞，行气止痛"
+  },
+  {
+    "name": "枳实",
+    "effect": "破气消积，化痰除痞，止痛"
+  },
+  {
+    "name": "枳壳",
+    "effect": "理气宽中，行滞消胀"
+  },
+  {
+    "name": "木香",
+    "effect": "行气止痛，健脾消食"
+  },
+  {
+    "name": "香附",
+    "effect": "疏肝解郁，理气宽中，调经止痛"
+  },
+  {
+    "name": "乌药",
+    "effect": "行气止痛，温肾散寒"
+  },
+  {
+    "name": "沉香",
+    "effect": "行气止痛，温中止呕，纳气平喘"
+  },
+  {
+    "name": "檀香",
+    "effect": "行气止痛，散寒调中，开胃"
+  },
+  {
+    "name": "川楝子",
+    "effect": "疏肝泄热，行气止痛，杀虫，疗癣"
+  },
+  {
+    "name": "薤白",
+    "effect": "通阳散结，行气导滞"
+  },
+  {
+    "name": "荔枝核",
+    "effect": "行气散结，散寒止痛"
+  },
+  {
+    "name": "佛手",
+    "effect": "疏肝理气，和胃止痛，燥湿化痰"
+  },
+  {
+    "name": "香橼",
+    "effect": "疏肝解郁，理气宽中，燥湿化痰"
+  },
+  {
+    "name": "玫瑰花",
+    "effect": "行气解郁，和血止痛"
+  },
+  {
+    "name": "大腹皮",
+    "effect": "行气宽中，利水消肿"
+  },
+  {
+    "name": "柿蒂",
+    "effect": "降气止呃"
+  },
+  {
+    "name": "刀豆",
+    "effect": "温中下气，降逆止呃，温肾助阳"
+  },
+  {
+    "name": "甘松",
+    "effect": "行气止痛，开郁醒脾；外用祛湿消肿"
+  },
+  {
+    "name": "梅花",
+    "effect": "疏肝和中，化痰散结"
+  },
+  {
+    "name": "山楂",
+    "effect": "消食健胃，行气散瘀，化浊降脂，散结止痛，止泻止痢"
+  },
+  {
+    "name": "莱菔子",
+    "effect": "消食除胀，降气化痰"
+  },
+  {
+    "name": "鸡内金",
+    "effect": "消食健胃，固精止遗，通淋化石"
+  },
+  {
+    "name": "六神曲",
+    "effect": "消食和胃，解表退热"
+  },
+  {
+    "name": "麦芽",
+    "effect": "消食行气，健脾开胃，回乳消胀，疏肝行气"
+  },
+  {
+    "name": "稻芽",
+    "effect": "消食和中，健脾开胃"
+  },
+  {
+    "name": "鹤草芽",
+    "effect": "杀虫，泻下通便"
+  },
+  {
+    "name": "使君子",
+    "effect": "杀虫消积，健脾消疳"
+  },
+  {
+    "name": "苦楝皮",
+    "effect": "杀虫疗癣"
+  },
+  {
+    "name": "槟榔",
+    "effect": "杀虫消积，行气利水，截疟"
+  },
+  {
+    "name": "雷丸",
+    "effect": "杀虫消积"
+  },
+  {
+    "name": "南瓜子",
+    "effect": "杀虫"
+  },
+  {
+    "name": "鹤虱",
+    "effect": "杀虫消积，泻下通便"
+  },
+  {
+    "name": "榧子",
+    "effect": "杀虫消积，润肺止咳，润肠通便"
+  },
+  {
+    "name": "大蓟",
+    "effect": "凉血止血，散瘀解毒，消痈"
+  },
+  {
+    "name": "小蓟",
+    "effect": "凉血止血，散瘀解毒，消痈，利尿通淋"
+  },
+  {
+    "name": "地榆",
+    "effect": "凉血止血，解毒敛疮"
+  },
+  {
+    "name": "槐花",
+    "effect": "凉血止血，清肝泻火"
+  },
+  {
+    "name": "白茅根",
+    "effect": "凉血止血，清热利尿"
+  },
+  {
+    "name": "苎麻根",
+    "effect": "凉血止血，安胎，清热解毒，利尿"
+  },
+  {
+    "name": "侧柏叶",
+    "effect": "凉血止血，化痰止咳，生发乌发，收敛止血"
+  },
+  {
+    "name": "三七",
+    "effect": "散瘀止血，消肿定痛，补虚强壮"
+  },
+  {
+    "name": "茜草",
+    "effect": "凉血止血，祛瘀通经"
+  },
+  {
+    "name": "蒲黄",
+    "effect": "化瘀止血，利尿通淋，收敛止血，祛瘀止痛"
+  },
+  {
+    "name": "白及",
+    "effect": "收敛止血，消肿生肌"
+  },
+  {
+    "name": "仙鹤草",
+    "effect": "收敛止血，截疟，止痢，解毒杀虫，补虚"
+  },
+  {
+    "name": "棕榈炭",
+    "effect": "收敛止血，止泻止带"
+  },
+  {
+    "name": "血余炭",
+    "effect": "收敛止血，化瘀，利尿"
+  },
+  {
+    "name": "紫珠叶",
+    "effect": "凉血收敛止血，散瘀解毒消肿"
+  },
+  {
+    "name": "艾叶",
+    "effect": "温经止血，散寒止痛，调经安胎；外用祛湿止痒"
+  },
+  {
+    "name": "炮姜",
+    "effect": "温经止血，温中止痛"
+  },
+  {
+    "name": "灶心土",
+    "effect": "温中止血，止呕，止泻"
+  },
+  {
+    "name": "川芎",
+    "effect": "活血行气，祛风止痛"
+  },
+  {
+    "name": "延胡索",
+    "effect": "活血，行气，止痛"
+  },
+  {
+    "name": "郁金",
+    "effect": "活血止痛，行气解郁，清心凉血，利胆退黄"
+  },
+  {
+    "name": "姜黄",
+    "effect": "活血行气，通经止痛"
+  },
+  {
+    "name": "乳香",
+    "effect": "活血定痛，消肿生肌"
+  },
+  {
+    "name": "没药",
+    "effect": "散瘀定痛，消肿生肌"
+  },
+  {
+    "name": "五灵脂",
+    "effect": "活血止痛，化瘀止血"
+  },
+  {
+    "name": "降香",
+    "effect": "化瘀止血，理气止痛"
+  },
+  {
+    "name": "川牛膝",
+    "effect": "逐瘀通经，通利关节，利尿通淋"
+  },
+  {
+    "name": "银杏叶",
+    "effect": "活血化瘀，通络止痛，敛肺平喘，化浊降脂"
+  },
+  {
+    "name": "丹参",
+    "effect": "活血祛瘀，通经止痛，清心除烦，凉血消痈"
+  },
+  {
+    "name": "红花",
+    "effect": "活血通经，散瘀止痛"
+  },
+  {
+    "name": "桃仁",
+    "effect": "活血祛瘀，润肠通便，止咳平喘，化瘀消痈"
+  },
+  {
+    "name": "益母草",
+    "effect": "活血调经，利水消肿，清热解毒"
+  },
+  {
+    "name": "泽兰",
+    "effect": "活血调经，祛瘀消痈，利水消肿"
+  },
+  {
+    "name": "牛膝",
+    "effect": "逐瘀通经，补肝肾，强筋骨，利尿通淋，引血下行"
+  },
+  {
+    "name": "鸡血藤",
+    "effect": "活血补血，调经止痛，舒筋活络"
+  },
+  {
+    "name": "王不留行",
+    "effect": "活血通经，下乳消痈，利尿通淋"
+  },
+  {
+    "name": "月季花",
+    "effect": "活血调经，疏肝解郁，消肿散结"
+  },
+  {
+    "name": "土鳖虫",
+    "effect": "破血逐瘀，续筋接骨"
+  },
+  {
+    "name": "马钱子",
+    "effect": "通络止痛，散结消肿"
+  },
+  {
+    "name": "血竭",
+    "effect": "活血定痛，化瘀止血，生肌敛疮"
+  },
+  {
+    "name": "苏木",
+    "effect": "活血祛瘀，消肿止痛"
+  },
+  {
+    "name": "自然铜",
+    "effect": "散瘀止痛，续筋接骨"
+  },
+  {
+    "name": "骨碎补",
+    "effect": "活血止痛，补肾强骨；外用消风祛斑"
+  },
+  {
+    "name": "儿茶",
+    "effect": "活血止痛，止血生肌，收湿敛疮，清肺化痰"
+  },
+  {
+    "name": "刘寄奴",
+    "effect": "破血通经，散瘀止痛，止血疗伤，消食化积"
+  },
+  {
+    "name": "莪术",
+    "effect": "破血行气，消积止痛"
+  },
+  {
+    "name": "三棱",
+    "effect": "破血行气，消积止痛"
+  },
+  {
+    "name": "水蛭",
+    "effect": "破血通经，逐瘀消癥"
+  },
+  {
+    "name": "斑蝥",
+    "effect": "破血逐瘀，散结消癥，攻毒蚀疮，助生毛发"
+  },
+  {
+    "name": "穿山甲（大纲已删除）",
+    "effect": "活血消癥，通经下乳，消肿排脓，搜风通络"
+  },
+  {
+    "name": "虻虫",
+    "effect": "破血逐瘀，消癥散积"
+  },
+  {
+    "name": "半夏",
+    "effect": "燥湿化痰，降逆止呕，消痞散结；外用消肿止痛"
+  },
+  {
+    "name": "天南星",
+    "effect": "燥湿化痰，祛风止痉，散结消肿止痛"
+  },
+  {
+    "name": "白附子",
+    "effect": "燥湿化痰，祛风止痉，止痛，解毒散结"
+  },
+  {
+    "name": "芥子",
+    "effect": "温肺祛痰，利气散结，通络止痛"
+  },
+  {
+    "name": "旋覆花",
+    "effect": "降气消痰，行水，止呕，活血通络"
+  },
+  {
+    "name": "白前",
+    "effect": "降气消痰，止咳"
+  },
+  {
+    "name": "皂荚",
+    "effect": "祛痰开窍，散结消肿，祛风杀虫，止痒"
+  },
+  {
+    "name": "桔梗",
+    "effect": "宣肺祛痰，利咽排脓，载药上行"
+  },
+  {
+    "name": "川贝母",
+    "effect": "清热润肺，化痰止咳，散结消痈"
+  },
+  {
+    "name": "浙贝母",
+    "effect": "清热化痰止咳，解毒散结消痈"
+  },
+  {
+    "name": "瓜蒌",
+    "effect": "清热涤痰，宽胸散结，润燥滑肠"
+  },
+  {
+    "name": "胆南星",
+    "effect": "清热化痰，息风定惊"
+  },
+  {
+    "name": "竹茹",
+    "effect": "清热化痰，除烦止呕，安胎，凉血止血"
+  },
+  {
+    "name": "竹沥",
+    "effect": "清热豁痰，定惊利窍"
+  },
+  {
+    "name": "天竺黄",
+    "effect": "清热豁痰，凉心定惊"
+  },
+  {
+    "name": "前胡",
+    "effect": "降气化痰，疏散风热"
+  },
+  {
+    "name": "胖大海",
+    "effect": "清热润肺，利咽开音，润肠通便"
+  },
+  {
+    "name": "海藻",
+    "effect": "消痰软坚散结，利水消肿"
+  },
+  {
+    "name": "昆布",
+    "effect": "消痰软坚散结，利水消肿"
+  },
+  {
+    "name": "黄药子",
+    "effect": "化痰散结消瘿，清热凉血解毒，止咳平喘"
+  },
+  {
+    "name": "海蛤壳",
+    "effect": "清热化痰，软坚散结，制酸止痛，利尿消肿；外用收湿敛疮"
+  },
+  {
+    "name": "海浮石",
+    "effect": "清肺化痰，软坚散结，利尿通淋"
+  },
+  {
+    "name": "礞石",
+    "effect": "坠痰下气，平肝镇惊，涤痰消食，软坚消积"
+  },
+  {
+    "name": "苦杏仁",
+    "effect": "降气止咳平喘，润肠通便"
+  },
+  {
+    "name": "紫苏子",
+    "effect": "降气化痰，止咳平喘，润肠通便"
+  },
+  {
+    "name": "百部",
+    "effect": "润肺下气止咳，杀虫灭虱"
+  },
+  {
+    "name": "紫菀",
+    "effect": "润肺下气，化痰止咳"
+  },
+  {
+    "name": "款冬花",
+    "effect": "润肺下气，止咳化痰"
+  },
+  {
+    "name": "桑白皮",
+    "effect": "泻肺平喘，利水消肿，清肝降压，止血"
+  },
+  {
+    "name": "葶苈子",
+    "effect": "泻肺平喘，利水消肿"
+  },
+  {
+    "name": "白果",
+    "effect": "敛肺定喘，止带缩尿"
+  },
+  {
+    "name": "马兜铃",
+    "effect": "清肺降气，止咳平喘，清肠消痔，清热平肝降压"
+  },
+  {
+    "name": "枇杷叶",
+    "effect": "清肺止咳，降逆止呕，清胃止渴"
+  },
+  {
+    "name": "洋金花",
+    "effect": "平喘止咳，解痉定痛，麻醉止痛"
+  },
+  {
+    "name": "朱砂",
+    "effect": "清心镇惊，安神，明目，解毒"
+  },
+  {
+    "name": "磁石",
+    "effect": "镇惊安神，平肝潜阳，聪耳明目，纳气平喘"
+  },
+  {
+    "name": "龙骨",
+    "effect": "镇惊安神，平肝潜阳，收敛固涩，收湿敛疮"
+  },
+  {
+    "name": "琥珀",
+    "effect": "镇惊安神，活血散瘀，利尿通淋，止血"
+  },
+  {
+    "name": "酸枣仁",
+    "effect": "养心补肝，宁心安神，敛汗生津"
+  },
+  {
+    "name": "柏子仁",
+    "effect": "养心安神，润肠通便，滋阴止汗"
+  },
+  {
+    "name": "远志",
+    "effect": "安神益智，交通心肾，祛痰开窍，止咳，消散痈肿"
+  },
+  {
+    "name": "首乌藤",
+    "effect": "养血安神，通经活络，祛风止痒"
+  },
+  {
+    "name": "合欢皮",
+    "effect": "解郁安神，活血消肿"
+  },
+  {
+    "name": "灵芝",
+    "effect": "补气安神，止咳平喘"
+  },
+  {
+    "name": "石决明",
+    "effect": "平肝潜阳，清肝明目，收湿敛疮，制酸止血"
+  },
+  {
+    "name": "牡蛎",
+    "effect": "潜阳补阴，重镇安神，软坚散结，收敛固涩，制酸止痛"
+  },
+  {
+    "name": "代赭石",
+    "effect": "平肝潜阳，重镇降逆，凉血止血"
+  },
+  {
+    "name": "珍珠母",
+    "effect": "平肝潜阳，明目退翳，安神定惊，燥湿收敛"
+  },
+  {
+    "name": "刺蒺藜",
+    "effect": "平抑肝阳，疏肝解郁，祛风明目，活血止痒"
+  },
+  {
+    "name": "罗布麻叶",
+    "effect": "平抑肝阳，安神，清热利水"
+  },
+  {
+    "name": "羚羊角",
+    "effect": "息风止痉，平肝潜阳，清肝明目，清热解毒，清肺止咳"
+  },
+  {
+    "name": "牛黄",
+    "effect": "凉肝息风，清心豁痰，开窍醒神，清热解毒"
+  },
+  {
+    "name": "钩藤",
+    "effect": "息风定惊，止痉，清肝平肝，疏风散热"
+  },
+  {
+    "name": "天麻",
+    "effect": "息风止痉，平抑肝阳，祛风通络止痛"
+  },
+  {
+    "name": "地龙",
+    "effect": "清热定惊，息风止痉，通经活络，平喘，利尿，降压"
+  },
+  {
+    "name": "全蝎",
+    "effect": "息风镇痉，通络止痛，攻毒散结"
+  },
+  {
+    "name": "蜈蚣",
+    "effect": "息风镇痉，通络止痛，攻毒散结"
+  },
+  {
+    "name": "僵蚕",
+    "effect": "息风止痉，祛风止痛，疏风散热，化痰散结"
+  },
+  {
+    "name": "珍珠",
+    "effect": "安神定惊，明目消翳，解毒生肌，润肤祛斑"
+  },
+  {
+    "name": "麝香",
+    "effect": "开窍醒神，活血通经，消肿止痛，催产"
+  },
+  {
+    "name": "石菖蒲",
+    "effect": "开窍豁痰，醒神益智，化湿和胃，辟秽"
+  },
+  {
+    "name": "冰片",
+    "effect": "开窍醒神，清热止痛，解毒生肌"
+  },
+  {
+    "name": "苏合香",
+    "effect": "开窍醒神，辟秽止痛"
+  },
+  {
+    "name": "人参",
+    "effect": "大补元气，复脉固脱，补脾益肺，生津养血，安神益智，扶正祛邪"
+  },
+  {
+    "name": "西洋参",
+    "effect": "补气养阴，清热生津，清肠止血"
+  },
+  {
+    "name": "党参",
+    "effect": "补脾益肺，养血生津"
+  },
+  {
+    "name": "太子参",
+    "effect": "益气健脾，生津润肺"
+  },
+  {
+    "name": "黄芪",
+    "effect": "补气升阳，固表止汗，利水消肿，生津养血，行滞通痹，托毒排脓，敛疮生肌"
+  },
+  {
+    "name": "白术",
+    "effect": "补气健脾，燥湿利水，止汗安胎"
+  },
+  {
+    "name": "山药",
+    "effect": "补脾养胃，生津益肺，补肾涩精，止带止泻"
+  },
+  {
+    "name": "甘草",
+    "effect": "补脾益气，清热解毒，止咳祛痰，缓急止痛，调和诸药"
+  },
+  {
+    "name": "白扁豆",
+    "effect": "补脾益气，健脾化湿，和中消暑，解毒"
+  },
+  {
+    "name": "大枣",
+    "effect": "补中益气，养血安神"
+  },
+  {
+    "name": "刺五加",
+    "effect": "益气健脾，补肾安神，祛痰平喘"
+  },
+  {
+    "name": "绞股蓝",
+    "effect": "益气健脾，化痰止咳，清热解毒，生津止渴"
+  },
+  {
+    "name": "红景天",
+    "effect": "益气活血，通脉平喘，清肺止咳"
+  },
+  {
+    "name": "沙棘",
+    "effect": "健脾消食，化痰止咳，活血祛瘀"
+  },
+  {
+    "name": "蜂蜜",
+    "effect": "补中，润燥，止痛，解毒；外用生肌敛疮；补益脾气，健脾益气，润肺止咳，润肠通便"
+  },
+  {
+    "name": "鹿茸",
+    "effect": "壮肾阳，益精血，强筋骨，调冲任，托疮毒"
+  },
+  {
+    "name": "淫羊藿",
+    "effect": "补肾阳，强筋骨，祛风湿"
+  },
+  {
+    "name": "巴戟天",
+    "effect": "补肾阳，强筋骨，祛风湿"
+  },
+  {
+    "name": "杜仲",
+    "effect": "补肝肾，强筋骨，安胎"
+  },
+  {
+    "name": "续断",
+    "effect": "补肝肾，强筋骨，续折伤，止崩漏，安胎"
+  },
+  {
+    "name": "菟丝子",
+    "effect": "补益肝肾，固精缩尿，安胎，明目，止泻；外用消风祛斑"
+  },
+  {
+    "name": "补骨脂",
+    "effect": "温肾助阳，纳气平喘，温脾止泻，固精缩尿；外用消风祛斑"
+  },
+  {
+    "name": "紫河车",
+    "effect": "温肾补精，益气养血"
+  },
+  {
+    "name": "肉苁蓉",
+    "effect": "补肾阳，益精血，润肠通便"
+  },
+  {
+    "name": "蛤蚧",
+    "effect": "补肺益肾，纳气定喘，助阳益精"
+  },
+  {
+    "name": "冬虫夏草",
+    "effect": "补肾益肺，止血化痰"
+  },
+  {
+    "name": "仙茅",
+    "effect": "补肾阳，强筋骨，祛寒湿"
+  },
+  {
+    "name": "益智仁",
+    "effect": "暖肾固精缩尿，温脾止泻，摄唾"
+  },
+  {
+    "name": "锁阳",
+    "effect": "补肾阳，益精血，润肠通便"
+  },
+  {
+    "name": "沙苑子",
+    "effect": "补肾助阳，固精缩尿，养肝明目"
+  },
+  {
+    "name": "核桃仁",
+    "effect": "补肾温肺，润肠"
+  },
+  {
+    "name": "当归",
+    "effect": "补血活血，调经止痛，润肠通便"
+  },
+  {
+    "name": "熟地黄",
+    "effect": "补血滋阴，益精填髓"
+  },
+  {
+    "name": "白芍",
+    "effect": "养血调经，敛阴止汗，柔肝止痛，平抑肝阳"
+  },
+  {
+    "name": "何首乌",
+    "effect": "生首乌：解毒，消痈，截疟，润肠通便；制首乌：补肝肾，益精血，乌须发，强筋骨，化浊降脂"
+  },
+  {
+    "name": "阿胶",
+    "effect": "补血，滋阴，润燥，止血"
+  },
+  {
+    "name": "龙眼肉",
+    "effect": "补益心脾，养血安神"
+  },
+  {
+    "name": "北沙参",
+    "effect": "养阴清肺，益胃生津"
+  },
+  {
+    "name": "南沙参",
+    "effect": "养阴清肺，益胃生津，化痰，益气"
+  },
+  {
+    "name": "麦冬",
+    "effect": "养阴润肺，益胃生津，清心除烦"
+  },
+  {
+    "name": "天冬",
+    "effect": "养阴润燥，清肺生津"
+  },
+  {
+    "name": "玉竹",
+    "effect": "养阴润燥，生津止渴"
+  },
+  {
+    "name": "石斛",
+    "effect": "益胃生津，滋阴清热"
+  },
+  {
+    "name": "百合",
+    "effect": "养阴润肺，清心安神，养阴清热"
+  },
+  {
+    "name": "黄精",
+    "effect": "补气养阴，健脾，润肺，益肾"
+  },
+  {
+    "name": "枸杞子",
+    "effect": "滋补肝肾，益精明目，补血"
+  },
+  {
+    "name": "墨旱莲",
+    "effect": "滋补肝肾，凉血止血"
+  },
+  {
+    "name": "女贞子",
+    "effect": "滋补肝肾，明目乌发"
+  },
+  {
+    "name": "龟甲",
+    "effect": "滋阴潜阳，益肾强骨，养血补心，固经止崩，息风，清热止血"
+  },
+  {
+    "name": "鳖甲",
+    "effect": "滋阴潜阳，退热除蒸，软坚散结，息风"
+  },
+  {
+    "name": "桑椹",
+    "effect": "滋阴养血，生津润燥"
+  },
+  {
+    "name": "麻黄根",
+    "effect": "固表止汗"
+  },
+  {
+    "name": "五味子",
+    "effect": "收敛固涩，益气生津，补肾宁心"
+  },
+  {
+    "name": "乌梅",
+    "effect": "敛肺，涩肠，生津，安蛔，固崩止血；外用消疮毒"
+  },
+  {
+    "name": "诃子",
+    "effect": "涩肠止泻，敛肺止咳，降火利咽"
+  },
+  {
+    "name": "肉豆蔻",
+    "effect": "温中行气，涩肠止泻，止痛"
+  },
+  {
+    "name": "赤石脂",
+    "effect": "涩肠止泻，收敛止血，生肌敛疮，收湿止带"
+  },
+  {
+    "name": "五倍子",
+    "effect": "敛肺降火，涩肠止泻，固精止遗，止血，敛汗，收湿敛疮，消肿解毒"
+  },
+  {
+    "name": "罂粟壳",
+    "effect": "敛肺，涩肠，止痛"
+  },
+  {
+    "name": "禹余粮",
+    "effect": "涩肠止泻，收敛止血，止带"
+  },
+  {
+    "name": "石榴皮",
+    "effect": "涩肠止泻，收敛止血，驱虫，涩精止带"
+  },
+  {
+    "name": "鸡冠花",
+    "effect": "收敛止血，涩肠止泻，止带，凉血"
+  },
+  {
+    "name": "山茱萸",
+    "effect": "补益肝肾，收敛固涩"
+  },
+  {
+    "name": "覆盆子",
+    "effect": "益肾固精缩尿，养肝明目"
+  },
+  {
+    "name": "椿皮",
+    "effect": "清热燥湿，收敛止带，止血止泻，杀虫"
+  },
+  {
+    "name": "桑螵蛸",
+    "effect": "固精缩尿，补肾助阳"
+  },
+  {
+    "name": "海螵蛸",
+    "effect": "收敛止血，涩精止带，制酸止痛，收湿敛疮"
+  },
+  {
+    "name": "金樱子",
+    "effect": "固精缩尿，固崩止带，涩肠止泻"
+  },
+  {
+    "name": "莲子",
+    "effect": "补脾止泻，止带，益肾固精，养心安神"
+  },
+  {
+    "name": "芡实",
+    "effect": "益肾固精，健脾止泻，除湿止带"
+  },
+  {
+    "name": "常山",
+    "effect": "涌吐痰涎，截疟"
+  },
+  {
+    "name": "瓜蒂",
+    "effect": "涌吐痰食，祛湿退黄"
+  },
+  {
+    "name": "胆矾",
+    "effect": "涌吐痰涎，解毒收湿，祛腐蚀疮"
+  },
+  {
+    "name": "雄黄",
+    "effect": "解毒杀虫，燥湿祛痰，截疟"
+  },
+  {
+    "name": "硫黄",
+    "effect": "外用解毒杀虫疗疮；内服补火助阳通便"
+  },
+  {
+    "name": "蟾酥",
+    "effect": "解毒止痛，开窍醒神"
+  },
+  {
+    "name": "蛇床子",
+    "effect": "燥湿祛风，杀虫止痒，温肾壮阳"
+  },
+  {
+    "name": "土荆皮",
+    "effect": "杀虫疗癣，止痒"
+  },
+  {
+    "name": "白矾",
+    "effect": "外用：解毒杀虫，燥湿止痒；内服：止血止泻，祛除风痰，燥湿退黄"
+  },
+  {
+    "name": "蜂房",
+    "effect": "攻毒杀虫，祛风止痛，止痒"
+  },
+  {
+    "name": "大蒜",
+    "effect": "解毒杀虫，消肿，止痢，健脾温胃，增强食欲"
+  },
+  {
+    "name": "红粉",
+    "effect": "拔毒，除脓，去腐，生肌"
+  },
+  {
+    "name": "炉甘石",
+    "effect": "解毒明目，退翳，收湿止痒，敛疮"
+  },
+  {
+    "name": "硼砂",
+    "effect": "外用清热解毒；内服清肺化痰"
+  },
+  {
+    "name": "砒石",
+    "effect": "外用攻毒杀虫，蚀疮祛腐；内服劫痰平喘，截疟，攻毒抑癌"
+  },
+  {
+    "name": "铅丹",
+    "effect": "外用拔毒生肌，杀虫止痒；内服坠痰镇惊，祛痰截疟"
+  },
+  {
+    "name": "轻粉",
+    "effect": "外用杀虫攻毒，敛疮；内服祛痰消积，逐水通便"
+  }
+];
+
+</script>
+    <script>
+const herbs = window.HERB_DATA || [];
+
+const state = {
+  mode: "name",
+  current: null,
+  seen: 0,
+  known: 0,
+  unknown: 0,
+  weakOnly: false,
+  weakNames: new Set(JSON.parse(localStorage.getItem("weakHerbs") || "[]")),
+  recentNames: [],
+};
+
+const els = {
+  totalCount: document.querySelector("#totalCount"),
+  poolCount: document.querySelector("#poolCount"),
+  modeLabel: document.querySelector("#modeLabel"),
+  promptText: document.querySelector("#promptText"),
+  answerBox: document.querySelector("#answerBox"),
+  answerText: document.querySelector("#answerText"),
+  showAnswerBtn: document.querySelector("#showAnswerBtn"),
+  nextBtn: document.querySelector("#nextBtn"),
+  knownBtn: document.querySelector("#knownBtn"),
+  unknownBtn: document.querySelector("#unknownBtn"),
+  seenCount: document.querySelector("#seenCount"),
+  knownCount: document.querySelector("#knownCount"),
+  unknownCount: document.querySelector("#unknownCount"),
+  searchInput: document.querySelector("#searchInput"),
+  reviewWeakBtn: document.querySelector("#reviewWeakBtn"),
+  resetBtn: document.querySelector("#resetBtn"),
+  modeButtons: document.querySelectorAll(".mode-btn"),
+};
+
+function getFilteredPool() {
+  const keyword = els.searchInput.value.trim();
+  let pool = herbs;
+
+  if (keyword) {
+    pool = pool.filter((herb) => herb.name.includes(keyword) || herb.effect.includes(keyword));
+  }
+
+  if (state.weakOnly) {
+    pool = pool.filter((herb) => state.weakNames.has(herb.name));
+  }
+
+  return pool;
+}
+
+function pickRandom(pool) {
+  if (pool.length === 0) return null;
+
+  const freshPool = pool.filter((herb) => !state.recentNames.includes(herb.name));
+  const candidates = freshPool.length > 0 ? freshPool : pool;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function setQuestion(herb) {
+  state.current = herb;
+  els.answerBox.classList.add("hidden");
+  els.showAnswerBtn.disabled = false;
+  els.knownBtn.disabled = !herb;
+  els.unknownBtn.disabled = !herb;
+
+  if (!herb) {
+    els.promptText.textContent = state.weakOnly ? "还没有不熟的题目" : "没有匹配的题目";
+    els.answerText.textContent = "";
+    els.showAnswerBtn.disabled = true;
+    updateCounts();
+    return;
+  }
+
+  const askingName = state.mode === "name";
+  els.modeLabel.textContent = askingName ? "药名" : "功效";
+  els.promptText.textContent = askingName ? herb.name : herb.effect;
+  els.answerText.textContent = askingName ? herb.effect : herb.name;
+
+  state.recentNames.push(herb.name);
+  if (state.recentNames.length > 24) state.recentNames.shift();
+
+  updateCounts();
+}
+
+function nextQuestion() {
+  setQuestion(pickRandom(getFilteredPool()));
+}
+
+function showAnswer() {
+  if (!state.current) return;
+  els.answerBox.classList.remove("hidden");
+  els.showAnswerBtn.disabled = true;
+}
+
+function judge(isKnown) {
+  if (!state.current) return;
+  state.seen += 1;
+
+  if (isKnown) {
+    state.known += 1;
+    state.weakNames.delete(state.current.name);
+  } else {
+    state.unknown += 1;
+    state.weakNames.add(state.current.name);
+  }
+
+  localStorage.setItem("weakHerbs", JSON.stringify([...state.weakNames]));
+  nextQuestion();
+}
+
+function updateCounts() {
+  const pool = getFilteredPool();
+  els.totalCount.textContent = herbs.length;
+  els.poolCount.textContent = `${pool.length} 条可抽`;
+  els.seenCount.textContent = state.seen;
+  els.knownCount.textContent = state.known;
+  els.unknownCount.textContent = state.unknown;
+  els.reviewWeakBtn.textContent = state.weakOnly ? `不熟题 ${pool.length} 条` : `只抽不熟 ${state.weakNames.size}`;
+  els.reviewWeakBtn.classList.toggle("active", state.weakOnly);
+}
+
+els.modeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    state.mode = button.dataset.mode;
+    els.modeButtons.forEach((item) => item.classList.toggle("active", item === button));
+    nextQuestion();
+  });
+});
+
+els.searchInput.addEventListener("input", nextQuestion);
+els.showAnswerBtn.addEventListener("click", showAnswer);
+els.nextBtn.addEventListener("click", nextQuestion);
+els.knownBtn.addEventListener("click", () => judge(true));
+els.unknownBtn.addEventListener("click", () => judge(false));
+els.reviewWeakBtn.addEventListener("click", () => {
+  state.weakOnly = !state.weakOnly;
+  nextQuestion();
+});
+els.resetBtn.addEventListener("click", () => {
+  state.seen = 0;
+  state.known = 0;
+  state.unknown = 0;
+  state.weakOnly = false;
+  state.weakNames.clear();
+  state.recentNames = [];
+  localStorage.removeItem("weakHerbs");
+  els.searchInput.value = "";
+  nextQuestion();
+});
+
+nextQuestion();
+
+</script>
+  </body>
+</html>
